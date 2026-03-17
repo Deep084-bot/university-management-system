@@ -160,6 +160,20 @@ a {
   justify-content: center;
 }
 
+.hero-login {
+  min-height: auto;
+  align-items: start;
+}
+
+.hero-login .auth-panel {
+  width: 100%;
+  max-width: 420px;
+  padding: 24px;
+  align-self: start;
+  justify-content: flex-start;
+  margin-top: 164px;
+}
+
 .eyebrow {
   display: inline-flex;
   width: fit-content;
