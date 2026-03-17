@@ -1,0 +1,263 @@
+<section class="page-head split-head">
+  <div>
+    <span class="eyebrow">Administrative controls</span>
+    <h1>Admin Console</h1>
+    <p>Manage academic offerings, faculty assignments, and placement operations from one surface.</p>
+  </div>
+</section>
+
+<section class="metric-grid">
+  <article class="metric-card"><span>Students</span><strong><%= snapshot.student_count %></strong></article>
+  <article class="metric-card"><span>Faculty</span><strong><%= snapshot.faculty_count %></strong></article>
+  <article class="metric-card"><span>Offerings</span><strong><%= snapshot.offering_count %></strong></article>
+  <article class="metric-card"><span>Placement Offers</span><strong><%= snapshot.placement_offer_count %></strong></article>
+  <article class="metric-card"><span>Applications</span><strong><%= snapshot.application_count %></strong></article>
+</section>
+
+<section class="triple-grid">
+  <article class="panel">
+    <h2>Create Company</h2>
+    <form class="stack-form" action="/admin/companies" method="post">
+      <label><span>Company Name</span><input type="text" name="companyName" required /></label>
+      <label><span>Contact Person</span><input type="text" name="contact" required /></label>
+      <label><span>Email</span><input type="email" name="email" required /></label>
+      <label><span>Industry Type</span><input type="text" name="industryType" required /></label>
+      <button class="primary-button" type="submit">Create Company</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>Create Placement Offer</h2>
+    <form class="stack-form" action="/admin/placement-offers" method="post">
+      <label>
+        <span>Company</span>
+        <select name="companyId">
+          <% companies.forEach((company) => { %>
+            <option value="<%= company.company_id %>"><%= company.company_name %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label><span>Role Name</span><input type="text" name="roleName" required /></label>
+      <label><span>Package CTC</span><input type="number" name="packageCtc" step="0.01" min="0" required /></label>
+      <label>
+        <span>Offer Type</span>
+        <select name="offerType">
+          <option value="Internship">Internship</option>
+          <option value="Full Time">Full Time</option>
+          <option value="PPO">PPO</option>
+        </select>
+      </label>
+      <label><span>Location</span><input type="text" name="location" /></label>
+      <label><span>Eligible Min CPI</span><input type="number" name="eligibleMinCpi" step="0.01" min="0" max="10" value="0" required /></label>
+      <label><span>Deadline</span><input type="date" name="applicationDeadline" /></label>
+      <button class="primary-button" type="submit">Create Offer</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>Create Course Offering</h2>
+    <form class="stack-form" action="/admin/course-offerings" method="post">
+      <label>
+        <span>Course</span>
+        <select name="courseId">
+          <% courseCatalog.forEach((course) => { %>
+            <option value="<%= course.course_id %>"><%= course.course_id %> · <%= course.course_name %> · Sem <%= course.semester_no %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label><span>Academic Year</span><input type="text" name="academicYear" value="<%= currentAcademicYear %>" required /></label>
+      <label><span>Section</span><input type="text" name="section" value="A" required /></label>
+      <button class="primary-button" type="submit">Create Offering</button>
+    </form>
+  </article>
+</section>
+
+<section class="dual-grid">
+  <article class="panel">
+    <div class="section-head">
+      <h2>Bulk Student Intake</h2>
+      <p>Add a full admission batch with generated roll numbers, institutional emails, and default credentials.</p>
+    </div>
+    <form class="stack-form" action="/admin/students/bulk" method="post">
+      <label>
+        <span>Program</span>
+        <select name="programId" required>
+          <% programs.forEach((program) => { %>
+            <option value="<%= program.program_id %>"><%= program.degree %> · <%= program.branch %> · <%= program.department_name %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        <span>Admission Year</span>
+        <input type="number" name="admissionYear" min="2000" max="2100" value="2025" required />
+      </label>
+      <label>
+        <span>Current Semester</span>
+        <input type="number" name="currentSemester" min="1" max="12" value="1" required />
+      </label>
+      <label>
+        <span>Default DOB</span>
+        <input type="date" name="defaultDob" value="2007-01-01" required />
+      </label>
+      <label>
+        <span>Default Gender</span>
+        <select name="defaultGender" required>
+          <option value="Prefer Not To Say">Prefer Not To Say</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Non-Binary">Non-Binary</option>
+        </select>
+      </label>
+      <label>
+        <span>Student Names (one per line)</span>
+        <textarea name="studentNames" rows="9" placeholder="Aarush Singh&#10;Ritika Iyer&#10;Devansh Kulkarni" required></textarea>
+      </label>
+      <button class="primary-button" type="submit">Create Student Batch</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <div class="section-head">
+      <h2>Student Batches</h2>
+      <p>Admission-year and program grouping for quick batch visibility.</p>
+    </div>
+    <div class="table-wrap compact-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Batch</th>
+            <th>Program</th>
+            <th>Students</th>
+            <th>Roll Range</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (studentBatches.length === 0) { %>
+            <tr><td colspan="4">No student batches have been created yet.</td></tr>
+          <% } %>
+          <% studentBatches.forEach((batch) => { %>
+            <tr>
+              <td><%= batch.admission_year %></td>
+              <td><%= batch.degree %> · <%= batch.branch %></td>
+              <td><%= batch.student_count %></td>
+              <td><%= batch.first_roll %> - <%= batch.last_roll %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>
+
+<section class="dual-grid">
+  <article class="panel">
+    <div class="section-head">
+      <h2>Assign Faculty to Offering</h2>
+      <p>Creates the TEACHES relationship for the selected offering.</p>
+    </div>
+    <form class="stack-form" action="/admin/faculty-assignments" method="post">
+      <label>
+        <span>Faculty</span>
+        <select name="facultyId">
+          <% facultyDirectory.forEach((faculty) => { %>
+            <option value="<%= faculty.user_id %>"><%= faculty.name %> · <%= faculty.employee_code %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        <span>Offering</span>
+        <select name="offeringId">
+          <% courseOfferings.forEach((offering) => { %>
+            <option value="<%= offering.offering_id %>"><%= offering.course_id %> · <%= offering.course_name %> · <%= offering.academic_year %> · <%= offering.section %></option>
+          <% }) %>
+        </select>
+      </label>
+      <button class="primary-button" type="submit">Assign Faculty</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <div class="section-head">
+      <h2>Company Directory</h2>
+      <p>Placement partners currently onboarded.</p>
+    </div>
+    <div class="table-wrap compact-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Contact</th>
+            <th>Industry</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% companies.forEach((company) => { %>
+            <tr>
+              <td><%= company.company_name %></td>
+              <td><%= company.contact %></td>
+              <td><%= company.industry_type %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>
+
+<section class="dual-grid">
+  <article class="panel">
+    <div class="section-head">
+      <h2>Placement Offers</h2>
+      <p>Live offers and applicant volumes.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Company</th>
+            <th>Role</th>
+            <th>Type</th>
+            <th>Applicants</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% placementOffers.forEach((offer) => { %>
+            <tr>
+              <td><%= offer.company_name %></td>
+              <td><%= offer.role_name %></td>
+              <td><%= offer.offer_type %></td>
+              <td><%= offer.applicant_count %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="section-head">
+      <h2>Course Offerings</h2>
+      <p>Semester-wise instances and teaching assignments.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Offering</th>
+            <th>Faculty</th>
+            <th>Enrollments</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% courseOfferings.forEach((offering) => { %>
+            <tr>
+              <td><strong><%= offering.course_id %></strong> · <%= offering.course_name %><br /><span><%= offering.academic_year %> · Section <%= offering.section %></span></td>
+              <td><%= offering.faculty_names || 'Unassigned' %></td>
+              <td><%= offering.enrollment_count %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </article>
+</section>

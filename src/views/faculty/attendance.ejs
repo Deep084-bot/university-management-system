@@ -1,0 +1,72 @@
+<section class="page-head split-head">
+  <div>
+    <span class="eyebrow">Faculty workflow</span>
+    <h1>Attendance Tracking</h1>
+    <p>Capture day-wise attendance against active enrollments with upsert-safe writes.</p>
+  </div>
+</section>
+
+<section class="panel">
+  <form class="stack-form inline-search" action="/faculty/attendance" method="get">
+    <label>
+      <span>Course Offering</span>
+      <select name="offeringId">
+        <% offerings.forEach((offering) => { %>
+          <option value="<%= offering.offering_id %>" <%= offering.offering_id === selectedOfferingId ? 'selected' : '' %>>
+            <%= offering.course_id %> · <%= offering.course_name %> · Section <%= offering.section %>
+          </option>
+        <% }) %>
+      </select>
+    </label>
+    <label>
+      <span>Attendance Date</span>
+      <input type="date" name="date" value="<%= selectedDate %>" />
+    </label>
+    <button class="primary-button" type="submit">Load Roster</button>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <h2>Roster</h2>
+    <p>Attendance percentage is computed from the historical attendance ledger.</p>
+  </div>
+  <form action="/faculty/attendance" method="post">
+    <input type="hidden" name="offeringId" value="<%= selectedOfferingId %>" />
+    <input type="hidden" name="attendanceDate" value="<%= selectedDate %>" />
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Type</th>
+            <th>Attendance %</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (roster.length === 0) { %>
+            <tr><td colspan="4">No students found for the selected offering.</td></tr>
+          <% } %>
+          <% roster.forEach((student) => { %>
+            <tr>
+              <td><strong><%= student.roll_number %></strong> · <%= student.name %></td>
+              <td><%= student.enrollment_type %></td>
+              <td><%= student.attendance_percentage %></td>
+              <td>
+                <select name="status_<%= student.enrollment_id %>">
+                  <option value="Present" <%= student.attendance_status === 'Present' ? 'selected' : '' %>>Present</option>
+                  <option value="Absent" <%= student.attendance_status === 'Absent' ? 'selected' : '' %>>Absent</option>
+                  <option value="Excused" <%= student.attendance_status === 'Excused' ? 'selected' : '' %>>Excused</option>
+                </select>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% if (roster.length > 0) { %>
+      <button class="primary-button" type="submit">Save Attendance</button>
+    <% } %>
+  </form>
+</section>

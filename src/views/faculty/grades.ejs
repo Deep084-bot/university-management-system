@@ -1,0 +1,137 @@
+<section class="page-head split-head">
+  <div>
+    <span class="eyebrow">Faculty workflow</span>
+    <h1>Grade Management</h1>
+    <p>Configure assessments, upload marks, and publish final grades against normalized grade scale entries.</p>
+  </div>
+</section>
+
+<section class="panel">
+  <form class="stack-form inline-search" action="/faculty/grades" method="get">
+    <label>
+      <span>Course Offering</span>
+      <select name="offeringId">
+        <% offerings.forEach((offering) => { %>
+          <option value="<%= offering.offering_id %>" <%= offering.offering_id === selectedOfferingId ? 'selected' : '' %>>
+            <%= offering.course_id %> · <%= offering.course_name %> · Section <%= offering.section %>
+          </option>
+        <% }) %>
+      </select>
+    </label>
+    <button class="primary-button" type="submit">Load Offering</button>
+  </form>
+</section>
+
+<section class="dual-grid">
+  <article class="panel">
+    <div class="section-head">
+      <h2>Assessment Components</h2>
+      <p>Each offering supports a flexible weightage model with trigger-enforced limits.</p>
+    </div>
+    <form class="stack-form" action="/faculty/grades/components" method="post">
+      <input type="hidden" name="offeringId" value="<%= selectedOfferingId %>" />
+      <label>
+        <span>Component Type</span>
+        <input type="text" name="type" placeholder="Midsem" required />
+      </label>
+      <label>
+        <span>Weightage</span>
+        <input type="number" min="1" max="100" step="0.01" name="weightage" required />
+      </label>
+      <label>
+        <span>Max Marks</span>
+        <input type="number" min="1" step="0.01" name="maxMarks" required />
+      </label>
+      <button class="primary-button" type="submit">Add Component</button>
+    </form>
+    <div class="component-list">
+      <% components.forEach((component) => { %>
+        <a class="component-chip <%= component.component_id === selectedComponentId ? 'active-chip' : '' %>" href="/faculty/grades?offeringId=<%= selectedOfferingId %>&componentId=<%= component.component_id %>">
+          <strong><%= component.type %></strong>
+          <span><%= component.weightage %>% · Max <%= component.max_marks %></span>
+        </a>
+      <% }) %>
+    </div>
+  </article>
+
+  <article class="panel">
+    <div class="section-head">
+      <h2>Component Marks</h2>
+      <p>Select a component to upsert marks. Weighted marks are computed in PostgreSQL.</p>
+    </div>
+    <% if (selectedComponentId) { %>
+      <form class="stack-form" action="/faculty/grades/marks" method="post">
+        <input type="hidden" name="offeringId" value="<%= selectedOfferingId %>" />
+        <input type="hidden" name="componentId" value="<%= selectedComponentId %>" />
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Marks</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% roster.forEach((student) => { %>
+                <tr>
+                  <td><strong><%= student.roll_number %></strong> · <%= student.name %></td>
+                  <td>
+                    <input type="number" step="0.01" min="0" name="marks_<%= student.enrollment_id %>" value="<%= marksByEnrollment[student.enrollment_id] ?? '' %>" />
+                  </td>
+                </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+        <button class="primary-button" type="submit">Save Marks</button>
+      </form>
+    <% } else { %>
+      <p class="empty-state">Select or create a component to start entering marks.</p>
+    <% } %>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <h2>Final Grades</h2>
+    <p>Publish grades against the normalized grade scale. Audit enrollments remain excluded from CPI.</p>
+  </div>
+  <form action="/faculty/grades/final" method="post">
+    <input type="hidden" name="offeringId" value="<%= selectedOfferingId %>" />
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Enrollment Type</th>
+            <th>Current Grade</th>
+            <th>Publish</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (roster.length === 0) { %>
+            <tr><td colspan="4">No students found for the selected offering.</td></tr>
+          <% } %>
+          <% roster.forEach((student) => { %>
+            <tr>
+              <td><strong><%= student.roll_number %></strong> · <%= student.name %></td>
+              <td><%= student.enrollment_type %></td>
+              <td><%= student.grade_letter || 'Pending' %></td>
+              <td>
+                <select name="grade_<%= student.enrollment_id %>">
+                  <option value="">Select grade</option>
+                  <% ['A+','A','B+','B','C','D','F'].forEach((grade) => { %>
+                    <option value="<%= grade %>" <%= student.grade_letter === grade ? 'selected' : '' %>><%= grade %></option>
+                  <% }) %>
+                </select>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% if (roster.length > 0) { %>
+      <button class="primary-button" type="submit">Publish Grades</button>
+    <% } %>
+  </form>
+</section>

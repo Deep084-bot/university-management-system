@@ -1,0 +1,119 @@
+<section class="page-head split-head">
+  <div>
+    <span class="eyebrow"><%= profile.roll_number %></span>
+    <h1>Course Registration</h1>
+    <p><%= profile.degree %> <%= profile.branch %> · Semester <%= profile.current_semester %> · <%= profile.department_name %></p>
+  </div>
+  <div class="pill-group">
+    <span class="pill">Active Year: <%= currentAcademicYear %></span>
+    <span class="pill">Open Semester: <%= currentSemester %></span>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <h2>Available Offerings</h2>
+    <p>Offerings aligned to your current semester and program.</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Course</th>
+          <th>Credits</th>
+          <th>Faculty</th>
+          <th>Attendance</th>
+          <th>Register</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (availableOfferings.length === 0) { %>
+          <tr><td colspan="5">No open offerings available for registration.</td></tr>
+        <% } %>
+        <% availableOfferings.forEach((offering) => { %>
+          <tr>
+            <td>
+              <strong><%= offering.course_id %></strong><br />
+              <span><%= offering.course_name %> · Section <%= offering.section %></span>
+            </td>
+            <td><%= offering.credits %></td>
+            <td><%= offering.faculty_names || 'TBA' %></td>
+            <td><%= offering.min_attendance_req %>%</td>
+            <td>
+              <form class="inline-form" action="/student/courses/register" method="post">
+                <input type="hidden" name="offeringId" value="<%= offering.offering_id %>" />
+                <select name="enrollmentType">
+                  <option value="Credit">Credit</option>
+                  <option value="Audit">Audit</option>
+                </select>
+                <button class="primary-button" type="submit">Enroll</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <h2>Enrollment History</h2>
+    <p>Track attempts, weighted totals, and final grades.</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Course</th>
+          <th>Academic Term</th>
+          <th>Type</th>
+          <th>Attempt</th>
+          <th>Weighted Total</th>
+          <th>Grade</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% currentEnrollments.forEach((enrollment) => { %>
+          <tr>
+            <td><strong><%= enrollment.course_id %></strong> · <%= enrollment.course_name %></td>
+            <td><%= enrollment.academic_year %> / Sem <%= enrollment.semester_no %></td>
+            <td><%= enrollment.enrollment_type %></td>
+            <td><%= enrollment.attempt_no %></td>
+            <td><%= enrollment.weighted_total %></td>
+            <td><%= enrollment.grade_letter || 'Pending' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <h2>Semester Results</h2>
+    <p>Normalized semester snapshots for SPI and earned credits.</p>
+  </div>
+  <div class="table-wrap compact-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Academic Year</th>
+          <th>Semester</th>
+          <th>SPI</th>
+          <th>Credits Earned</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% semesterResults.forEach((result) => { %>
+          <tr>
+            <td><%= result.academic_year %></td>
+            <td><%= result.semester_no %></td>
+            <td><%= result.spi %></td>
+            <td><%= result.credits_earned_sem %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>

@@ -1,0 +1,27 @@
+<header class="topbar">
+  <div>
+    <a class="brand" href="/dashboard">SUMS 2.0</a>
+    <p class="tagline">Smart University Academic and Placement Management System</p>
+  </div>
+  <% if (currentUser) { %>
+    <nav class="nav-links">
+      <a href="/dashboard">Dashboard</a>
+      <% if (currentUser.user_type === 'STUDENT') { %>
+        <a href="/student/courses">Registration</a>
+        <a href="/placements">Placements</a>
+      <% } %>
+      <% if (currentUser.user_type === 'FACULTY') { %>
+        <a href="/faculty/attendance">Attendance</a>
+        <a href="/faculty/grades">Grades</a>
+      <% } %>
+      <% if (currentUser.user_type === 'ADMIN') { %>
+        <a href="/admin">Admin Console</a>
+        <a href="/admin/students-directory">Students Directory</a>
+        <a href="/admin/faculty-directory">Faculty Directory</a>
+      <% } %>
+      <form action="/logout" method="post">
+        <button class="ghost-button" type="submit">Sign Out</button>
+      </form>
+    </nav>
+  <% } %>
+</header>

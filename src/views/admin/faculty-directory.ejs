@@ -1,0 +1,101 @@
+<section class="page-head split-head">
+  <div>
+    <span class="eyebrow">Admin-only directory</span>
+    <h1>Faculty Directory</h1>
+    <p>Browse and filter all faculty records using designation, department, and identity attributes.</p>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <h2>Faculty Filters</h2>
+    <p>Showing <strong><%= facultyMembers.length %></strong> records.</p>
+  </div>
+  <form class="stack-form inline-search" action="/admin/faculty-directory" method="get">
+    <label>
+      <span>Name</span>
+      <input type="text" name="facultyName" value="<%= facultyFilters.facultyName %>" placeholder="Faculty name" />
+    </label>
+    <label>
+      <span>Employee Code</span>
+      <input type="text" name="employeeCode" value="<%= facultyFilters.employeeCode %>" placeholder="FAC-101" />
+    </label>
+    <label>
+      <span>Designation</span>
+      <select name="designation">
+        <option value="">All designations</option>
+        <% designations.forEach((item) => { %>
+          <option value="<%= item %>" <%= facultyFilters.designation === item ? 'selected' : '' %>><%= item %></option>
+        <% }) %>
+      </select>
+    </label>
+    <label>
+      <span>Department</span>
+      <select name="departmentId">
+        <option value="">All departments</option>
+        <% departments.forEach((department) => { %>
+          <option value="<%= department.department_id %>" <%= Number(facultyFilters.departmentId) === Number(department.department_id) ? 'selected' : '' %>><%= department.department_name %></option>
+        <% }) %>
+      </select>
+    </label>
+    <label>
+      <span>Email</span>
+      <input type="text" name="facultyEmail" value="<%= facultyFilters.email %>" placeholder="@sums.edu" />
+    </label>
+    <label>
+      <span>Phone</span>
+      <input type="text" name="facultyPhone" value="<%= facultyFilters.phone %>" placeholder="9900000001" />
+    </label>
+    <label>
+      <span>Gender</span>
+      <select name="facultyGender">
+        <option value="">All genders</option>
+        <% ['Male', 'Female', 'Non-Binary', 'Prefer Not To Say'].forEach((gender) => { %>
+          <option value="<%= gender %>" <%= facultyFilters.gender === gender ? 'selected' : '' %>><%= gender %></option>
+        <% }) %>
+      </select>
+    </label>
+    <label>
+      <span>DOB</span>
+      <input type="date" name="facultyDob" value="<%= facultyFilters.dob %>" />
+    </label>
+    <button class="primary-button" type="submit">Apply Faculty Filters</button>
+    <a class="ghost-button" href="/admin/faculty-directory">Clear Filters</a>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Employee Code</th>
+          <th>Name</th>
+          <th>Designation</th>
+          <th>Department</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Gender</th>
+          <th>DOB</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (facultyMembers.length === 0) { %>
+          <tr><td colspan="8">No faculty records found for the selected filters.</td></tr>
+        <% } %>
+        <% facultyMembers.forEach((faculty) => { %>
+          <tr>
+            <td><strong><%= faculty.employee_code %></strong></td>
+            <td><%= faculty.name %></td>
+            <td><%= faculty.designation %></td>
+            <td><%= faculty.department_name %></td>
+            <td><%= faculty.email %></td>
+            <td><%= faculty.phone %></td>
+            <td><%= faculty.gender %></td>
+            <td><%= new Date(faculty.dob).toISOString().slice(0, 10) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>

@@ -1,0 +1,70 @@
+<section class="page-head split-head">
+  <div>
+    <span class="eyebrow">Placement workflow</span>
+    <h1>Placement Board</h1>
+    <p>Only roles meeting your CPI threshold are surfaced for application.</p>
+  </div>
+</section>
+
+<section class="card-grid placements-grid">
+  <% if (offers.length === 0) { %>
+    <article class="panel"><p>No eligible offers are currently open.</p></article>
+  <% } %>
+  <% offers.forEach((offer) => { %>
+    <article class="panel placement-card">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow"><%= offer.company_name %> · <%= offer.offer_type %></span>
+          <h2><%= offer.role_name %></h2>
+        </div>
+        <span class="salary-tag">CTC <%= offer.package_ctc %> LPA</span>
+      </div>
+      <p><strong>Industry:</strong> <%= offer.industry_type %></p>
+      <p><strong>Location:</strong> <%= offer.location || 'Not specified' %></p>
+      <p><strong>Eligibility CPI:</strong> <%= offer.eligible_min_cpi %> · <strong>Your CPI:</strong> <%= offer.student_cpi %></p>
+      <p><strong>Apply by:</strong> <%= offer.application_deadline ? new Date(offer.application_deadline).toLocaleDateString() : 'Rolling' %></p>
+      <% if (offer.application_status) { %>
+        <span class="pill success-pill"><%= offer.application_status %></span>
+      <% } else { %>
+        <form action="/placements/apply" method="post">
+          <input type="hidden" name="offerId" value="<%= offer.offer_id %>" />
+          <button class="primary-button" type="submit">Apply Now</button>
+        </form>
+      <% } %>
+    </article>
+  <% }) %>
+</section>
+
+<section class="panel">
+  <div class="section-head">
+    <h2>Application History</h2>
+    <p>All submitted placement applications with workflow state.</p>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Company</th>
+          <th>Role</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Applied At</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (applications.length === 0) { %>
+          <tr><td colspan="5">No applications submitted yet.</td></tr>
+        <% } %>
+        <% applications.forEach((application) => { %>
+          <tr>
+            <td><%= application.company_name %></td>
+            <td><%= application.role_name %></td>
+            <td><%= application.offer_type %></td>
+            <td><%= application.status %></td>
+            <td><%= new Date(application.applied_at).toLocaleString() %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>

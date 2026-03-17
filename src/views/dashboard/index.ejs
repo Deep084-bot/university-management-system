@@ -1,0 +1,58 @@
+<section class="page-head">
+  <div>
+    <span class="eyebrow"><%= currentUser.user_type %> Workspace</span>
+    <h1>Dashboard</h1>
+    <p>
+      <% if (summary.profile) { %>
+        Signed in as <strong><%= summary.profile.name %></strong>
+        <% if (summary.profile.branch) { %>
+          in <strong><%= summary.profile.degree %> <%= summary.profile.branch %></strong>
+        <% } %>
+        <% if (summary.profile.designation) { %>
+          serving as <strong><%= summary.profile.designation %></strong>
+        <% } %>
+      <% } %>
+    </p>
+  </div>
+</section>
+
+<section class="metric-grid">
+  <% summary.metrics.forEach((metric) => { %>
+    <article class="metric-card">
+      <span><%= metric.label %></span>
+      <strong><%= metric.value %></strong>
+    </article>
+  <% }) %>
+</section>
+
+<section class="panel quick-links">
+  <h2>Workflows</h2>
+  <div class="card-grid">
+    <% if (currentUser.user_type === 'STUDENT') { %>
+      <a class="mini-card" href="/student/courses">
+        <h3>Course Registration</h3>
+        <p>Register credit or audit enrollments for <%= currentAcademicYear %>.</p>
+      </a>
+      <a class="mini-card" href="/placements">
+        <h3>Placement Board</h3>
+        <p>Review eligible roles and manage submitted applications.</p>
+      </a>
+    <% } %>
+    <% if (currentUser.user_type === 'FACULTY') { %>
+      <a class="mini-card" href="/faculty/attendance">
+        <h3>Attendance Tracking</h3>
+        <p>Mark and update day-wise attendance against live enrollments.</p>
+      </a>
+      <a class="mini-card" href="/faculty/grades">
+        <h3>Grade Management</h3>
+        <p>Configure components, upload marks, and publish final grades.</p>
+      </a>
+    <% } %>
+    <% if (currentUser.user_type === 'ADMIN') { %>
+      <a class="mini-card" href="/admin">
+        <h3>Admin Console</h3>
+        <p>Create offerings, onboard companies, and manage faculty assignments.</p>
+      </a>
+    <% } %>
+  </div>
+</section>
