@@ -22,6 +22,17 @@
       <p><strong>Industry:</strong> <%= offer.industry_type %></p>
       <p><strong>Location:</strong> <%= offer.location || 'Not specified' %></p>
       <p><strong>Eligibility CPI:</strong> <%= offer.eligible_min_cpi %> · <strong>Your CPI:</strong> <%= offer.student_cpi %></p>
+      <p>
+        <strong>Eligible Graduating Batch:</strong>
+        <% if (offer.eligible_grad_batch_from && offer.eligible_grad_batch_to && Number(offer.eligible_grad_batch_to) > Number(offer.eligible_grad_batch_from)) { %>
+          <%= offer.eligible_grad_batch_from %> - <%= offer.eligible_grad_batch_to %>
+        <% } else if (offer.eligible_grad_batch_from) { %>
+          <%= offer.eligible_grad_batch_from %>
+        <% } else { %>
+          All
+        <% } %>
+        · <strong>Your Batch:</strong> <%= offer.student_graduating_batch %>
+      </p>
       <p><strong>Apply by:</strong> <%= offer.application_deadline ? new Date(offer.application_deadline).toLocaleDateString() : 'Rolling' %></p>
       <% if (offer.application_status) { %>
         <span class="pill success-pill"><%= offer.application_status %></span>

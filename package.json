@@ -7,8 +7,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "setup": "node setup.js",
-    "db:schema": "psql \"$DATABASE_URL\" -f sql/schema.sql",
-    "db:seed": "psql \"$DATABASE_URL\" -f sql/seed.sql"
+    "db:schema": "node src/scripts/schema.js",
+    "db:seed": "node src/scripts/seed.js"
   },
   "keywords": [
     "postgresql",

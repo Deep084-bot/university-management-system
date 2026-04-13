@@ -9,19 +9,25 @@ async function showDashboard(req, res) {
   let summary = {};
 
   if (user.user_type === 'STUDENT') {
-    const [profile, currentEnrollments, availableOfferings, applications] = await Promise.all([
+    const [profile, currentEnrollments, availableOfferings, applications, allSemesters, cpiData] = await Promise.all([
       studentModel.getStudentProfile(user.user_id),
       studentModel.listCurrentEnrollments(user.user_id),
       studentModel.listAvailableOfferings(user.user_id, env.currentAcademicYear),
-      placementModel.listApplications(user.user_id)
+      placementModel.listApplications(user.user_id),
+      studentModel.getAllSemesters(user.user_id),
+      studentModel.getCurrentCPI(user.user_id)
     ]);
 
+    const cumulativeCPI = cpiData && cpiData.cumulative_cpi ? Number(cpiData.cumulative_cpi).toFixed(2) : '0.00';
     summary = {
       profile,
+      allSemesters,
+      cpiData,
       metrics: [
         { label: 'Current Enrollments', value: currentEnrollments.length },
         { label: 'Open Registrations', value: availableOfferings.length },
-        { label: 'Placement Applications', value: applications.length }
+        { label: 'Placement Applications', value: applications.length },
+        { label: 'Cumulative CPI', value: cumulativeCPI }
       ]
     };
   }
@@ -49,7 +55,7 @@ async function showDashboard(req, res) {
     summary = {
       profile: {
         name: user.name,
-        admin_code: user.admin_code
+        admin_role: user.admin_role || user.admin_code || 'Administrator'
       },
       metrics: [
         { label: 'Students', value: snapshot.student_count },

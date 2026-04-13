@@ -18,22 +18,34 @@ async function applyToOffer(studentId, offerId) {
         throw new ServiceError('Student record not found.', 404);
       }
 
-      const cpiResult = await client.query(
+      const studentProfileResult = await client.query(
         `
-          SELECT COALESCE(
-            (SELECT graduating_cpi FROM final_outcome WHERE student_id = $1),
-            (SELECT ROUND(AVG(spi), 2) FROM semester_result WHERE student_id = $1),
-            0
-          ) AS current_cpi
+          SELECT
+            (s.admission_year + p.duration_years) AS graduating_batch,
+            COALESCE(
+              (SELECT graduating_cpi FROM final_outcome WHERE student_id = $1),
+              (SELECT ROUND(AVG(spi), 2) FROM semester_result WHERE student_id = $1),
+              s.curr_cpi,
+              0
+            ) AS current_cpi
+          FROM student s
+          JOIN program p ON p.program_id = s.program_id
+          WHERE s.user_id = $1
         `,
         [studentId]
       );
 
-      const currentCpi = Number(cpiResult.rows[0].current_cpi);
+      const currentCpi = Number(studentProfileResult.rows[0].current_cpi);
+      const graduatingBatch = Number(studentProfileResult.rows[0].graduating_batch);
 
       const offerResult = await client.query(
         `
-          SELECT offer_id, eligible_min_cpi, application_deadline
+          SELECT
+            offer_id,
+            eligible_min_cpi,
+            eligible_grad_batch_from,
+            eligible_grad_batch_to,
+            application_deadline
           FROM placement_offer
           WHERE offer_id = $1
           FOR UPDATE
@@ -52,6 +64,14 @@ async function applyToOffer(studentId, offerId) {
 
       if (currentCpi < Number(offer.eligible_min_cpi)) {
         throw new ServiceError('Your CPI does not meet the eligibility threshold for this role.', 403);
+      }
+
+      if (offer.eligible_grad_batch_from && graduatingBatch < Number(offer.eligible_grad_batch_from)) {
+        throw new ServiceError('Your graduating batch is not eligible for this placement offer.', 403);
+      }
+
+      if (offer.eligible_grad_batch_to && graduatingBatch > Number(offer.eligible_grad_batch_to)) {
+        throw new ServiceError('Your graduating batch is not eligible for this placement offer.', 403);
       }
 
       const insertResult = await client.query(

@@ -111,9 +111,96 @@ async function listSemesterResults(studentId) {
   return result.rows;
 }
 
+async function getAllSemesters(studentId) {
+  const result = await query(
+    `
+      SELECT
+        s.current_semester,
+        p.duration_years
+      FROM student s
+      JOIN program p ON p.program_id = s.program_id
+      WHERE s.user_id = $1
+    `,
+    [studentId]
+  );
+
+  if (result.rows.length === 0) {
+    return [];
+  }
+
+  const { current_semester: currentSemester } = result.rows[0];
+  
+  // Fetch all completed semester results
+  const spiResult = await query(
+    `
+      SELECT academic_year, semester_no, spi, credits_earned_sem
+      FROM semester_result
+      WHERE student_id = $1
+      ORDER BY academic_year DESC, semester_no DESC
+    `,
+    [studentId]
+  );
+
+  const semesterMap = Object.fromEntries(
+    spiResult.rows.map((row) => [row.semester_no, row])
+  );
+
+  // Build complete semester array from 1 to current, filling missing with defaults
+  const allSemesters = [];
+  for (let sem = 1; sem <= currentSemester; sem += 1) {
+    allSemesters.push(
+      semesterMap[sem] || {
+        semester_no: sem,
+        academic_year: null,
+        spi: 0,
+        credits_earned_sem: 0
+      }
+    );
+  }
+
+  return allSemesters;
+}
+
+async function getCurrentCPI(studentId) {
+  try {
+    const result = await query(
+      `
+        SELECT
+          COALESCE(
+            ROUND(
+              CAST(SUM(CASE WHEN credits_earned_sem > 0 THEN spi * credits_earned_sem ELSE 0 END)
+              / NULLIF(SUM(CASE WHEN credits_earned_sem > 0 THEN credits_earned_sem ELSE 0 END), 0) AS numeric),
+              2
+            ),
+            0
+          )::numeric AS cumulative_cpi,
+          COALESCE(SUM(credits_earned_sem), 0)::numeric AS total_credits_earned
+        FROM semester_result
+        WHERE student_id = $1
+      `,
+      [studentId]
+    );
+
+    if (result.rows.length === 0) {
+      return { cumulative_cpi: 0, total_credits_earned: 0 };
+    }
+
+    const row = result.rows[0];
+    return {
+      cumulative_cpi: Number(row.cumulative_cpi) || 0,
+      total_credits_earned: Number(row.total_credits_earned) || 0
+    };
+  } catch (error) {
+    console.error('Error calculating CPI:', error);
+    return { cumulative_cpi: 0, total_credits_earned: 0 };
+  }
+}
+
 module.exports = {
   getStudentProfile,
   listCurrentEnrollments,
   listAvailableOfferings,
-  listSemesterResults
+  listSemesterResults,
+  getAllSemesters,
+  getCurrentCPI
 };

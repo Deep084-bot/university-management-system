@@ -8,7 +8,7 @@ const morgan = require('morgan');
 const env = require('./config/env');
 const { pool } = require('./config/db');
 const flashMiddleware = require('./middleware/flash');
-const { ensureAuthenticated } = require('./middleware/auth');
+const { ensureAuthenticated, enforcePasswordChange } = require('./middleware/auth');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 
 const authRoutes = require('./routes/authRoutes');
@@ -53,6 +53,7 @@ app.use((req, res, next) => {
   res.locals.currentSemester = env.currentSemester;
   next();
 });
+app.use(enforcePasswordChange);
 
 app.get('/', (req, res) => {
   if (!req.session.user) {

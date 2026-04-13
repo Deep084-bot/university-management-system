@@ -11,6 +11,9 @@
         <% if (summary.profile.designation) { %>
           serving as <strong><%= summary.profile.designation %></strong>
         <% } %>
+        <% if (summary.profile.admin_role) { %>
+          with role <strong><%= summary.profile.admin_role %></strong>
+        <% } %>
       <% } %>
     </p>
   </div>
@@ -24,6 +27,38 @@
     </article>
   <% }) %>
 </section>
+
+<% if (currentUser.user_type === 'STUDENT' && summary.allSemesters && summary.allSemesters.length > 0) { %>
+  <section class="panel">
+    <div class="section-head">
+      <h2>Semester Performance</h2>
+      <p>Semester Performance Index (SPI) for each semester, with Cumulative Performance Index (CPI) calculated till current semester. Current or ongoing semesters show SPI of 0.00.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Semester</th>
+            <th>Academic Year</th>
+            <th>SPI</th>
+            <th>Credits Earned</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% summary.allSemesters.forEach((result, index) => { %>
+            <% const isCurrent = (index + 1) >= summary.profile.current_semester; %>
+            <tr style="<%= isCurrent ? 'background-color: #e8f4f8;' : '' %>">
+              <td><strong>Sem <%= result.semester_no %></strong> <%= isCurrent ? '(Current)' : '' %></td>
+              <td><%= result.academic_year || 'Ongoing' %></td>
+              <td><span style="font-size: 1.2em; font-weight: bold;"><%= result.spi ? Number(result.spi).toFixed(2) : '0.00' %></span></td>
+              <td><%= result.credits_earned_sem ? Number(result.credits_earned_sem).toFixed(1) : '0.0' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+<% } %>
 
 <section class="panel quick-links">
   <h2>Workflows</h2>
@@ -46,6 +81,10 @@
       <a class="mini-card" href="/faculty/grades">
         <h3>Grade Management</h3>
         <p>Configure components, upload marks, and publish final grades.</p>
+      </a>
+      <a class="mini-card" href="/faculty/finalize-semester">
+        <h3>Finalize Semester</h3>
+        <p>Enter relative marks out of 10 and auto-calculate final grades and SPI.</p>
       </a>
     <% } %>
     <% if (currentUser.user_type === 'ADMIN') { %>

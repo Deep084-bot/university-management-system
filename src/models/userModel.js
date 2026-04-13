@@ -11,6 +11,7 @@ async function findByEmail(email) {
         u.dob,
         u.gender,
         u.password,
+        u.must_change_password,
         u.user_type,
         s.roll_number,
         s.program_id,
@@ -18,8 +19,7 @@ async function findByEmail(email) {
         f.department_id AS faculty_department_id,
         f.employee_code,
         f.designation,
-        a.admin_code,
-        a.role_title
+        a.role AS admin_role
       FROM app_user u
       LEFT JOIN student s ON s.user_id = u.user_id
       LEFT JOIN faculty f ON f.user_id = u.user_id
@@ -42,6 +42,7 @@ async function findById(userId) {
         u.phone,
         u.dob,
         u.gender,
+        u.must_change_password,
         u.user_type,
         s.roll_number,
         s.program_id,
@@ -49,8 +50,7 @@ async function findById(userId) {
         f.department_id AS faculty_department_id,
         f.employee_code,
         f.designation,
-        a.admin_code,
-        a.role_title
+        a.role AS admin_role
       FROM app_user u
       LEFT JOIN student s ON s.user_id = u.user_id
       LEFT JOIN faculty f ON f.user_id = u.user_id

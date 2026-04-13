@@ -62,7 +62,7 @@ Covered flows include:
    ```bash
    npm run db:schema
    ```
-5. Seed demo data:
+5. Run the seed step (adds one admin account):
    ```bash
    npm run db:seed
    ```
@@ -71,11 +71,9 @@ Covered flows include:
    npm run dev
    ```
 
-## Seeded Accounts
+## Seeded Admin
 
 - Admin: `admin@sums.edu` / `Admin@123`
-- Faculty: `faculty@sums.edu` / `Faculty@123`
-- Student: `student@sums.edu` / `Student@123`
 
 ## Available Workflows
 
@@ -100,6 +98,7 @@ Covered flows include:
 
 ## Notes
 
-- The schema uses `crypt(..., gen_salt('bf'))` in PostgreSQL for seeded password hashes, which are compatible with `bcryptjs` verification in the Node.js app.
+- `npm run db:schema` and `npm run db:seed` both load the `.env` file through the Node scripts, so you do not need to export `DATABASE_URL` manually in your shell.
+- `npm run db:seed` inserts a single admin account by default; add your own fixture data if you want more sample records.
 - `connect-pg-simple` will create the session table automatically when the app starts.
 - The current academic year and semester used by the registration workflow are controlled through environment variables.

@@ -38,6 +38,8 @@ async function listPlacementOffers() {
         po.offer_type,
         po.location,
         po.eligible_min_cpi,
+        po.eligible_grad_batch_from,
+        po.eligible_grad_batch_to,
         po.application_deadline,
         COUNT(a.application_id) AS applicant_count
       FROM placement_offer po
@@ -88,6 +90,45 @@ async function listDepartments() {
       FROM department
       ORDER BY department_name
     `
+  );
+
+  return result.rows;
+}
+
+async function listAdminUsers() {
+  const result = await query(
+    `
+      SELECT a.user_id, u.name, u.email, a.role
+      FROM admin_user a
+      JOIN app_user u ON u.user_id = a.user_id
+      ORDER BY u.name
+    `
+  );
+
+  return result.rows;
+}
+
+async function listRecentCredentialIssuances(limit = 100) {
+  const safeLimit = Number.isFinite(limit) ? Math.max(1, Math.min(500, Math.trunc(limit))) : 100;
+
+  const result = await query(
+    `
+      SELECT
+        cil.issuance_id,
+        cil.user_id,
+        cil.user_type,
+        u.name,
+        cil.generated_email,
+        cil.generated_password,
+        cil.issued_at,
+        cil.is_active,
+        cil.consumed_at
+      FROM credential_issuance_log cil
+      JOIN app_user u ON u.user_id = cil.user_id
+      ORDER BY cil.issued_at DESC
+      LIMIT $1
+    `,
+    [safeLimit]
   );
 
   return result.rows;
@@ -309,27 +350,6 @@ async function listCurrentSemesters() {
   return result.rows.map((row) => row.current_semester);
 }
 
-async function listStudentBatches() {
-  const result = await query(
-    `
-      SELECT
-        s.admission_year,
-        p.program_id,
-        p.degree,
-        p.branch,
-        COUNT(*) AS student_count,
-        MIN(s.roll_number) AS first_roll,
-        MAX(s.roll_number) AS last_roll
-      FROM student s
-      JOIN program p ON p.program_id = s.program_id
-      GROUP BY s.admission_year, p.program_id, p.degree, p.branch
-      ORDER BY s.admission_year DESC, p.degree, p.branch
-    `
-  );
-
-  return result.rows;
-}
-
 async function listFacultyDirectory() {
   const result = await query(
     `
@@ -376,7 +396,8 @@ module.exports = {
   listCourseCatalog,
   listPrograms,
   listDepartments,
-  listStudentBatches,
+  listAdminUsers,
+  listRecentCredentialIssuances,
   searchStudents,
   searchFaculty,
   listFacultyDesignations,

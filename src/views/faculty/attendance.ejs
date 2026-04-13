@@ -26,6 +26,12 @@
   </form>
 </section>
 
+<% if (attendanceBanner) { %>
+  <section class="panel">
+    <p class="empty-state"><%= attendanceBanner.message %></p>
+  </section>
+<% } %>
+
 <section class="panel">
   <div class="section-head">
     <h2>Roster</h2>
@@ -55,6 +61,7 @@
               <td><%= student.attendance_percentage %></td>
               <td>
                 <select name="status_<%= student.enrollment_id %>">
+                  <option value="" <%= !student.attendance_status ? 'selected' : '' %>>Not Updated</option>
                   <option value="Present" <%= student.attendance_status === 'Present' ? 'selected' : '' %>>Present</option>
                   <option value="Absent" <%= student.attendance_status === 'Absent' ? 'selected' : '' %>>Absent</option>
                   <option value="Excused" <%= student.attendance_status === 'Excused' ? 'selected' : '' %>>Excused</option>

@@ -1,0 +1,119 @@
+<section class="page-head split-head">
+  <div>
+    <span class="eyebrow">Faculty workflow</span>
+    <h1>Finalize Semester Results</h1>
+    <p>Enter final marks out of 10 for each student. Grades will be assigned based on relative performance, and semester SPI will be automatically calculated.</p>
+  </div>
+</section>
+
+<section class="panel">
+  <form class="stack-form inline-search" action="/faculty/finalize-semester" method="get">
+    <label>
+      <span>Course Offering</span>
+      <select name="offeringId">
+        <% offerings.forEach((offering) => { %>
+          <option value="<%= offering.offering_id %>" <%= offering.offering_id === selectedOfferingId ? 'selected' : '' %>>
+            <%= offering.course_id %> · <%= offering.course_name %> · Section <%= offering.section %>
+          </option>
+        <% }) %>
+      </select>
+    </label>
+    <button class="primary-button" type="submit">Load Offering</button>
+  </form>
+</section>
+
+<% if (selectedOfferingId && roster.length > 0) { %>
+  <section class="panel">
+    <div class="section-head">
+      <h2>Student Semester History & Final Marks</h2>
+      <p>Review each student's semester performance, then enter their final marks out of 10 for this course.</p>
+    </div>
+
+    <form action="/faculty/finalize-semester" method="post">
+      <input type="hidden" name="offeringId" value="<%= selectedOfferingId %>" />
+      
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Sem 1</th>
+              <th>Sem 2</th>
+              <th>Sem 3</th>
+              <th>Sem 4</th>
+              <th>Sem 5</th>
+              <th>Sem 6</th>
+              <th>Sem 7</th>
+              <th>Sem 8</th>
+              <th>CPI</th>
+              <th colspan="2">Final Mark (/10) & Grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% roster.forEach((student) => { %>
+              <% const details = studentDetailsByEnrollment[student.enrollment_id]; %>
+              <% const { semesters = [], studentInfo = {} } = details || {}; %>
+              <tr>
+                <td><strong><%= student.roll_number %></strong> · <%= student.name %></td>
+                
+                <!-- Semester SPIs -->
+                <% for (let sem = 0; sem < 8; sem += 1) { %>
+                  <td style="text-align: center; font-size: 0.9em;">
+                    <% if (semesters[sem]) { %>
+                      <% const isCurrentSem = semesters[sem].semester_no === studentInfo.current_semester; %>
+                      <span style="<%= isCurrentSem ? 'background-color: #e8f4f8; padding: 4px; border-radius: 3px; font-weight: bold;' : '' %>">
+                        <%= semesters[sem].spi ? Number(semesters[sem].spi).toFixed(2) : '-' %>
+                      </span>
+                    <% } %>
+                  </td>
+                <% } %>
+                
+                <!-- CPI -->
+                <td style="text-align: center;"><strong><%= studentInfo.student_cpi ? Number(studentInfo.student_cpi).toFixed(2) : '0.00' %></strong></td>
+                
+                <!-- Final Mark Input -->
+                <td>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="10"
+                    name="finalMarks_<%= student.enrollment_id %>"
+                    placeholder="0-10"
+                    value=""
+                    style="width: 70px;"
+                    required
+                  />
+                </td>
+                <td style="font-size: 0.9em; color: #666;">
+                  (Grade will be assigned)
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px;">
+        <strong>Grading Scale (Relative):</strong>
+        <ul style="margin: 10px 0; list-style-position: inside;">
+          <li>Top 10% → A+ (10 points)</li>
+          <li>10-25% → A (9 points)</li>
+          <li>25-45% → B+ (8 points)</li>
+          <li>45-65% → B (7 points)</li>
+          <li>65-80% → C (6 points)</li>
+          <li>80-90% → D (5 points)</li>
+          <li>Below 90% → F (0 points)</li>
+        </ul>
+      </div>
+
+      <button class="primary-button" type="submit" style="margin-top: 20px;">Finalize & Calculate SPI</button>
+    </form>
+  </section>
+<% } %>
+
+<% if (selectedOfferingId && roster.length === 0) { %>
+  <section class="panel">
+    <p class="empty-state">No students enrolled in the selected offering.</p>
+  </section>
+<% } %>

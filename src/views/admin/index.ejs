@@ -16,6 +16,162 @@
 
 <section class="triple-grid">
   <article class="panel">
+    <h2>Create Department</h2>
+    <form class="stack-form" action="/admin/departments" method="post">
+      <label><span>Department Name</span><input type="text" name="departmentName" required /></label>
+      <button class="primary-button" type="submit">Create Department</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>Create Program</h2>
+    <form class="stack-form" action="/admin/programs" method="post">
+      <label>
+        <span>Department</span>
+        <select name="departmentId" required>
+          <% departments.forEach((department) => { %>
+            <option value="<%= department.department_id %>"><%= department.department_name %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label><span>Degree</span><input type="text" name="degree" placeholder="B.Tech" required /></label>
+      <label><span>Branch</span><input type="text" name="branch" placeholder="Computer Science and Engineering" required /></label>
+      <label><span>Duration (Years)</span><input type="number" name="durationYears" min="1" max="8" value="4" required /></label>
+      <button class="primary-button" type="submit">Create Program</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>Create Course</h2>
+    <form class="stack-form" action="/admin/courses" method="post">
+      <label><span>Course ID</span><input type="text" name="courseId" placeholder="CS301" required /></label>
+      <label><span>Course Name</span><input type="text" name="courseName" required /></label>
+      <label><span>Credits</span><input type="number" name="credits" min="0.5" step="0.5" required /></label>
+      <label>
+        <span>Category</span>
+        <select name="category" required>
+          <option value="Core">Core</option>
+          <option value="Elective">Elective</option>
+          <option value="Lab">Lab</option>
+          <option value="Project">Project</option>
+        </select>
+      </label>
+      <label><span>Min Attendance %</span><input type="number" name="minAttendanceReq" min="0" max="100" step="0.01" value="75" required /></label>
+      <label>
+        <span>Program</span>
+        <select name="programId" required>
+          <% programs.forEach((program) => { %>
+            <option value="<%= program.program_id %>"><%= program.degree %> · <%= program.branch %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label><span>Semester</span><input type="number" name="semesterNo" min="1" max="12" required /></label>
+      <button class="primary-button" type="submit">Create Course</button>
+    </form>
+  </article>
+</section>
+
+<section class="triple-grid">
+  <article class="panel">
+    <h2>Create Student Account</h2>
+    <form class="stack-form" action="/admin/accounts/students" method="post">
+      <label><span>Name</span><input type="text" name="name" required /></label>
+      <label><span>Phone</span><input type="text" name="phone" required /></label>
+      <label><span>DOB</span><input type="date" name="dob" required /></label>
+      <label>
+        <span>Gender</span>
+        <select name="gender" required>
+          <option value="Prefer Not To Say">Prefer Not To Say</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Non-Binary">Non-Binary</option>
+        </select>
+      </label>
+      <label>
+        <span>Program</span>
+        <select name="programId" required>
+          <% programs.forEach((program) => { %>
+            <option value="<%= program.program_id %>"><%= program.degree %> · <%= program.branch %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label><span>Admission Year</span><input type="number" name="admissionYear" min="2000" max="2100" required /></label>
+      <label><span>Current Semester</span><input type="number" name="currentSemester" min="1" max="12" required /></label>
+      <label>
+        <span>Academic Status</span>
+        <select name="academicStatus" required>
+          <option value="Active">Active</option>
+          <option value="Graduated">Graduated</option>
+          <option value="Dropped">Dropped</option>
+          <option value="On Hold">On Hold</option>
+        </select>
+      </label>
+      <label><span>Current CPI</span><input type="number" name="currCpi" min="0" max="10" step="0.01" value="0" required /></label>
+      <p class="helper-text">Roll number, institute email, and temporary password are generated automatically.</p>
+      <button class="primary-button" type="submit">Create Student</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>Create Faculty Account</h2>
+    <form class="stack-form" action="/admin/accounts/faculty" method="post">
+      <label><span>Name</span><input type="text" name="name" required /></label>
+      <label><span>Phone</span><input type="text" name="phone" required /></label>
+      <label><span>DOB</span><input type="date" name="dob" required /></label>
+      <label>
+        <span>Gender</span>
+        <select name="gender" required>
+          <option value="Prefer Not To Say">Prefer Not To Say</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Non-Binary">Non-Binary</option>
+        </select>
+      </label>
+      <label>
+        <span>Department</span>
+        <select id="facultyDepartmentSelect" name="departmentId" required>
+          <% departments.forEach((department) => { %>
+            <option value="<%= department.department_id %>"><%= department.department_name %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        <span>Employee Code (Auto Generated)</span>
+        <input id="facultyEmployeeCodePreview" type="text" value="Loading..." readonly />
+      </label>
+      <label><span>Designation</span><input type="text" name="designation" required /></label>
+      <label><span>Experience (Years)</span><input type="number" name="experienceYears" min="0" value="0" required /></label>
+      <label><span>Qualification</span><input type="text" name="qualification" placeholder="M.Tech / Ph.D" required /></label>
+      <p class="helper-text">Institute email and temporary password are generated from employee code.</p>
+      <button class="primary-button" type="submit">Create Faculty</button>
+    </form>
+  </article>
+
+  <article class="panel">
+    <h2>Create Admin Account</h2>
+    <form class="stack-form" action="/admin/accounts/admins" method="post">
+      <label><span>Name</span><input type="text" name="name" required /></label>
+      <label><span>Email</span><input type="email" name="email" required /></label>
+      <label><span>Phone</span><input type="text" name="phone" required /></label>
+      <label><span>DOB</span><input type="date" name="dob" required /></label>
+      <label>
+        <span>Gender</span>
+        <select name="gender" required>
+          <option value="Prefer Not To Say">Prefer Not To Say</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Non-Binary">Non-Binary</option>
+        </select>
+      </label>
+      <label><span>Password</span><input type="text" name="password" value="Admin@123" required /></label>
+      <label><span>Role</span><input type="text" name="role" value="Administrator" required /></label>
+      <button class="primary-button" type="submit">Create Admin</button>
+    </form>
+  </article>
+</section>
+
+<section class="triple-grid">
+  <article class="panel">
     <h2>Create Company</h2>
     <form class="stack-form" action="/admin/companies" method="post">
       <label><span>Company Name</span><input type="text" name="companyName" required /></label>
@@ -49,6 +205,21 @@
       </label>
       <label><span>Location</span><input type="text" name="location" /></label>
       <label><span>Eligible Min CPI</span><input type="number" name="eligibleMinCpi" step="0.01" min="0" max="10" value="0" required /></label>
+      <label>
+        <span>Eligible Graduating Batch</span>
+        <select name="graduatingBatchFrom" required>
+          <% placementBatchOptions.forEach((batchYear) => { %>
+            <option value="<%= batchYear %>"><%= batchYear %></option>
+          <% }) %>
+        </select>
+      </label>
+      <label>
+        <span>Batch Coverage</span>
+        <label class="inline-form" style="gap: 8px; align-items: center;">
+          <input type="checkbox" name="applyToHigherBatches" />
+          <span>Apply to selected batch and above (up to <%= maxGraduatingBatch %>)</span>
+        </label>
+      </label>
       <label><span>Deadline</span><input type="date" name="applicationDeadline" /></label>
       <button class="primary-button" type="submit">Create Offer</button>
     </form>
@@ -72,82 +243,105 @@
   </article>
 </section>
 
-<section class="dual-grid">
-  <article class="panel">
-    <div class="section-head">
-      <h2>Bulk Student Intake</h2>
-      <p>Add a full admission batch with generated roll numbers, institutional emails, and default credentials.</p>
-    </div>
-    <form class="stack-form" action="/admin/students/bulk" method="post">
-      <label>
-        <span>Program</span>
-        <select name="programId" required>
-          <% programs.forEach((program) => { %>
-            <option value="<%= program.program_id %>"><%= program.degree %> · <%= program.branch %> · <%= program.department_name %></option>
-          <% }) %>
-        </select>
-      </label>
-      <label>
-        <span>Admission Year</span>
-        <input type="number" name="admissionYear" min="2000" max="2100" value="2025" required />
-      </label>
-      <label>
-        <span>Current Semester</span>
-        <input type="number" name="currentSemester" min="1" max="12" value="1" required />
-      </label>
-      <label>
-        <span>Default DOB</span>
-        <input type="date" name="defaultDob" value="2007-01-01" required />
-      </label>
-      <label>
-        <span>Default Gender</span>
-        <select name="defaultGender" required>
-          <option value="Prefer Not To Say">Prefer Not To Say</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Non-Binary">Non-Binary</option>
-        </select>
-      </label>
-      <label>
-        <span>Student Names (one per line)</span>
-        <textarea name="studentNames" rows="9" placeholder="Aarush Singh&#10;Ritika Iyer&#10;Devansh Kulkarni" required></textarea>
-      </label>
-      <button class="primary-button" type="submit">Create Student Batch</button>
-    </form>
-  </article>
-
-  <article class="panel">
-    <div class="section-head">
-      <h2>Student Batches</h2>
-      <p>Admission-year and program grouping for quick batch visibility.</p>
-    </div>
-    <div class="table-wrap compact-table">
-      <table>
-        <thead>
+<section class="panel">
+  <div class="section-head">
+    <h2>Admin Directory</h2>
+    <p>Admins with role definitions.</p>
+  </div>
+  <div class="table-wrap compact-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (adminUsers.length === 0) { %>
+          <tr><td colspan="3">No admin accounts found.</td></tr>
+        <% } %>
+        <% adminUsers.forEach((admin) => { %>
           <tr>
-            <th>Batch</th>
-            <th>Program</th>
-            <th>Students</th>
-            <th>Roll Range</th>
+            <td><%= admin.name %></td>
+            <td><%= admin.email %></td>
+            <td><%= admin.role %></td>
           </tr>
-        </thead>
-        <tbody>
-          <% if (studentBatches.length === 0) { %>
-            <tr><td colspan="4">No student batches have been created yet.</td></tr>
-          <% } %>
-          <% studentBatches.forEach((batch) => { %>
-            <tr>
-              <td><%= batch.admission_year %></td>
-              <td><%= batch.degree %> · <%= batch.branch %></td>
-              <td><%= batch.student_count %></td>
-              <td><%= batch.first_roll %> - <%= batch.last_roll %></td>
-            </tr>
-          <% }) %>
-        </tbody>
-      </table>
-    </div>
-  </article>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
 </section>
+
+<section class="panel">
+  <div class="section-head">
+    <h2>Generated Credentials</h2>
+    <p>Latest generated institute credentials for student and faculty onboarding.</p>
+  </div>
+  <div class="table-wrap compact-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Issued At</th>
+          <th>User</th>
+          <th>Type</th>
+          <th>Email</th>
+          <th>Temporary Password</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (credentialIssuances.length === 0) { %>
+          <tr><td colspan="6">No generated credentials recorded yet.</td></tr>
+        <% } %>
+        <% credentialIssuances.forEach((record) => { %>
+          <tr>
+            <td><%= new Date(record.issued_at).toLocaleString() %></td>
+            <td><%= record.name %></td>
+            <td><%= record.user_type %></td>
+            <td><%= record.generated_email %></td>
+            <td><%= record.generated_password %></td>
+            <td><%= record.is_active ? 'Pending First Login Reset' : 'Consumed' %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+  (function initializeFacultyEmployeeCodePreview() {
+    const departmentSelect = document.getElementById('facultyDepartmentSelect');
+    const employeeCodePreview = document.getElementById('facultyEmployeeCodePreview');
+
+    if (!departmentSelect || !employeeCodePreview) {
+      return;
+    }
+
+    const loadPreview = async () => {
+      const departmentId = departmentSelect.value;
+      if (!departmentId) {
+        employeeCodePreview.value = 'Select department first';
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/faculty/next-employee-code?departmentId=${encodeURIComponent(departmentId)}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch employee code preview');
+        }
+
+        const data = await response.json();
+        employeeCodePreview.value = data.employeeCode || 'Auto generated on submit';
+      } catch (error) {
+        employeeCodePreview.value = 'Auto generated on submit';
+      }
+    };
+
+    departmentSelect.addEventListener('change', loadPreview);
+    loadPreview();
+  })();
+</script>
 
 <section class="dual-grid">
   <article class="panel">
@@ -217,15 +411,27 @@
             <th>Company</th>
             <th>Role</th>
             <th>Type</th>
+            <th>Graduating Batch</th>
             <th>Applicants</th>
           </tr>
         </thead>
         <tbody>
           <% placementOffers.forEach((offer) => { %>
+            <% const batchFrom = offer.eligible_grad_batch_from; %>
+            <% const batchTo = offer.eligible_grad_batch_to; %>
             <tr>
               <td><%= offer.company_name %></td>
               <td><%= offer.role_name %></td>
               <td><%= offer.offer_type %></td>
+              <td>
+                <% if (batchFrom && batchTo && Number(batchTo) > Number(batchFrom)) { %>
+                  <%= batchFrom %> - <%= batchTo %>
+                <% } else if (batchFrom) { %>
+                  <%= batchFrom %>
+                <% } else { %>
+                  All
+                <% } %>
+              </td>
               <td><%= offer.applicant_count %></td>
             </tr>
           <% }) %>

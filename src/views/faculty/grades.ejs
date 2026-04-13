@@ -22,6 +22,51 @@
   </form>
 </section>
 
+<% if (selectedOfferingId && gradebook.length > 0) { %>
+  <section class="panel">
+    <div class="section-head">
+      <h2>Relative Gradebook</h2>
+      <p>Final grades are suggested from the cohort ranking. Top 10% maps to A+, then A, B+, B, C, D, and F.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Total Weighted Score</th>
+            <th>Rank</th>
+            <th>Suggested Grade</th>
+            <th>Published Grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% gradebook.forEach((student) => { %>
+            <tr>
+              <td><strong><%= student.roll_number %></strong> · <%= student.name %></td>
+              <td><%= Number(student.total_weighted_marks).toFixed(2) %> / 100</td>
+              <td>#<%= student.rank_position %> · <%= Math.round(Number(student.percentile_rank) * 100) %>%</td>
+              <td><strong><%= student.suggested_grade %></strong></td>
+              <td><%= student.published_grade || 'Pending' %></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+<% } %>
+
+<% if (selectedOfferingId) { %>
+  <section class="panel">
+    <div class="section-head">
+      <h2>Finalize Semester Results</h2>
+      <p>Enter final marks out of 10 for each student based on relative performance. Grades will be auto-assigned and semester SPI calculated.</p>
+    </div>
+    <a class="primary-button" href="/faculty/finalize-semester?offeringId=<%= selectedOfferingId %>">
+      Go to Finalize Semester
+    </a>
+  </section>
+<% } %>
+
 <section class="dual-grid">
   <article class="panel">
     <div class="section-head">
@@ -46,7 +91,7 @@
     </form>
     <div class="component-list">
       <% components.forEach((component) => { %>
-        <a class="component-chip <%= component.component_id === selectedComponentId ? 'active-chip' : '' %>" href="/faculty/grades?offeringId=<%= selectedOfferingId %>&componentId=<%= component.component_id %>">
+        <a class="component-chip <%= Number(component.component_id) === Number(selectedComponentId) ? 'active-chip' : '' %>" href="/faculty/grades?offeringId=<%= selectedOfferingId %>&componentId=<%= component.component_id %>">
           <strong><%= component.type %></strong>
           <span><%= component.weightage %>% · Max <%= component.max_marks %></span>
         </a>
@@ -58,8 +103,11 @@
     <div class="section-head">
       <h2>Component Marks</h2>
       <p>Select a component to upsert marks. Weighted marks are computed in PostgreSQL.</p>
+      <% if (selectedComponent) { %>
+        <p><strong>Current component:</strong> <%= selectedComponent.type %> · <%= selectedComponent.weightage %>% of the final grade · Max <%= selectedComponent.max_marks %> marks.</p>
+      <% } %>
     </div>
-    <% if (selectedComponentId) { %>
+    <% if (selectedComponent) { %>
       <form class="stack-form" action="/faculty/grades/marks" method="post">
         <input type="hidden" name="offeringId" value="<%= selectedOfferingId %>" />
         <input type="hidden" name="componentId" value="<%= selectedComponentId %>" />
@@ -68,21 +116,45 @@
             <thead>
               <tr>
                 <th>Student</th>
+                <th>CPI</th>
+                <th>Latest SPI</th>
                 <th>Marks</th>
+                <th>Weighted Contribution</th>
               </tr>
             </thead>
             <tbody>
               <% roster.forEach((student) => { %>
                 <tr>
                   <td><strong><%= student.roll_number %></strong> · <%= student.name %></td>
+                  <td><%= student.student_cpi ? Number(student.student_cpi).toFixed(2) : '0.00' %></td>
+                  <td><%= student.latest_spi ? Number(student.latest_spi).toFixed(2) : '0.00' %></td>
                   <td>
-                    <input type="number" step="0.01" min="0" name="marks_<%= student.enrollment_id %>" value="<%= marksByEnrollment[student.enrollment_id] ?? '' %>" />
+                    <input
+                      class="component-mark-input"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      max="<%= selectedComponent.max_marks %>"
+                      name="marks_<%= student.enrollment_id %>"
+                      value="<%= marksByEnrollment[student.enrollment_id]?.marks_obtained ?? '' %>"
+                      data-max-marks="<%= selectedComponent.max_marks %>"
+                      data-weightage="<%= selectedComponent.weightage %>"
+                    />
+                  </td>
+                  <td>
+                    <span
+                      class="weighted-preview"
+                      data-preview-for="marks_<%= student.enrollment_id %>"
+                    >
+                      <%= marksByEnrollment[student.enrollment_id]?.weighted_marks ? Number(marksByEnrollment[student.enrollment_id].weighted_marks).toFixed(2) : '0.00' %>
+                    </span>
                   </td>
                 </tr>
               <% }) %>
             </tbody>
           </table>
         </div>
+        <p class="empty-state">The weighted contribution updates live as marks change for <%= selectedComponent.type %>.</p>
         <button class="primary-button" type="submit">Save Marks</button>
       </form>
     <% } else { %>
@@ -94,7 +166,7 @@
 <section class="panel">
   <div class="section-head">
     <h2>Final Grades</h2>
-    <p>Publish grades against the normalized grade scale. Audit enrollments remain excluded from CPI.</p>
+    <p>Publish grades against the normalized grade scale. Suggested values default to the relative gradebook, and audit enrollments remain excluded from CPI.</p>
   </div>
   <form action="/faculty/grades/final" method="post">
     <input type="hidden" name="offeringId" value="<%= selectedOfferingId %>" />
@@ -113,15 +185,17 @@
             <tr><td colspan="4">No students found for the selected offering.</td></tr>
           <% } %>
           <% roster.forEach((student) => { %>
+            <% const gradebookEntry = gradebook.find((entry) => entry.enrollment_id === student.enrollment_id); %>
+            <% const defaultGrade = student.grade_letter || gradebookEntry?.suggested_grade || ''; %>
             <tr>
               <td><strong><%= student.roll_number %></strong> · <%= student.name %></td>
               <td><%= student.enrollment_type %></td>
-              <td><%= student.grade_letter || 'Pending' %></td>
+              <td><%= defaultGrade || 'Pending' %></td>
               <td>
                 <select name="grade_<%= student.enrollment_id %>">
                   <option value="">Select grade</option>
                   <% ['A+','A','B+','B','C','D','F'].forEach((grade) => { %>
-                    <option value="<%= grade %>" <%= student.grade_letter === grade ? 'selected' : '' %>><%= grade %></option>
+                    <option value="<%= grade %>" <%= defaultGrade === grade ? 'selected' : '' %>><%= grade %></option>
                   <% }) %>
                 </select>
               </td>
@@ -135,3 +209,33 @@
     <% } %>
   </form>
 </section>
+
+<script>
+  (() => {
+    const inputs = document.querySelectorAll('.component-mark-input');
+
+    const renderPreview = (input) => {
+      const maxMarks = Number(input.dataset.maxMarks || 0);
+      const weightage = Number(input.dataset.weightage || 0);
+      const preview = document.querySelector(`[data-preview-for="${input.name}"]`);
+
+      if (!preview) {
+        return;
+      }
+
+      const marks = Number(input.value);
+      if (!Number.isFinite(marks) || marks < 0 || maxMarks <= 0) {
+        preview.textContent = '0.00';
+        return;
+      }
+
+      const weightedContribution = (marks / maxMarks) * weightage;
+      preview.textContent = weightedContribution.toFixed(2);
+    };
+
+    inputs.forEach((input) => {
+      renderPreview(input);
+      input.addEventListener('input', () => renderPreview(input));
+    });
+  })();
+</script>

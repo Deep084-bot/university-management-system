@@ -25,16 +25,13 @@ async function runSetup() {
     console.log('\nRunning seed.sql...');
     const seed = fs.readFileSync(seedPath, 'utf8');
     await client.query(seed);
-    console.log('✓ Database seeded successfully');
+    console.log('✓ Admin seed configured');
 
     client.release();
     await pool.end();
 
     console.log('\n✓ Setup complete!');
-    console.log('\nYou can now login with:');
-    console.log('  Admin: admin@sums.edu / Admin@123');
-    console.log('  Faculty: faculty@sums.edu / Faculty@123');
-    console.log('  Student: student@sums.edu / Student@123');
+    console.log('\nAdmin login: admin@sums.edu / Admin@123');
     console.log('\nRun: npm run dev');
   } catch (error) {
     console.error('✗ Setup failed:', error.message);

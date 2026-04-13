@@ -1,8 +1,20 @@
 const adminModel = require('../models/adminModel');
 const adminService = require('../services/adminService');
+const env = require('../config/env');
 
 async function showAdminConsole(req, res) {
-  const [snapshot, companies, placementOffers, courseCatalog, courseOfferings, facultyDirectory, programs, studentBatches] = await Promise.all([
+  const [
+    snapshot,
+    companies,
+    placementOffers,
+    courseCatalog,
+    courseOfferings,
+    facultyDirectory,
+    programs,
+    departments,
+    adminUsers,
+    credentialIssuances
+  ] = await Promise.all([
     adminModel.getAdminSnapshot(),
     adminModel.listCompanies(),
     adminModel.listPlacementOffers(),
@@ -10,8 +22,21 @@ async function showAdminConsole(req, res) {
     adminModel.listCourseOfferings(),
     adminModel.listFacultyDirectory(),
     adminModel.listPrograms(),
-    adminModel.listStudentBatches()
+    adminModel.listDepartments(),
+    adminModel.listAdminUsers(),
+    adminModel.listRecentCredentialIssuances(100)
   ]);
+
+  const academicYearStart = Number.parseInt(String(env.currentAcademicYear).split('-')[0], 10);
+  const maxGraduatingBatch = Number.isNaN(academicYearStart)
+    ? new Date().getFullYear() + 4
+    : academicYearStart + 4;
+  const placementBatchOptions = [
+    maxGraduatingBatch - 3,
+    maxGraduatingBatch - 2,
+    maxGraduatingBatch - 1,
+    maxGraduatingBatch
+  ].filter((value, index, source) => value >= 2000 && source.indexOf(value) === index);
 
   return res.render('admin/index', {
     title: 'Admin Console',
@@ -22,8 +47,107 @@ async function showAdminConsole(req, res) {
     courseOfferings,
     facultyDirectory,
     programs,
-    studentBatches
+    departments,
+    maxGraduatingBatch,
+    placementBatchOptions,
+    adminUsers,
+    credentialIssuances
   });
+}
+
+async function createDepartment(req, res) {
+  await adminService.createDepartment({
+    departmentName: req.body.departmentName
+  });
+
+  req.flash('success', 'Department created successfully.');
+  return res.redirect('/admin');
+}
+
+async function createProgram(req, res) {
+  await adminService.createProgram({
+    departmentId: Number(req.body.departmentId),
+    degree: req.body.degree,
+    branch: req.body.branch,
+    durationYears: Number(req.body.durationYears)
+  });
+
+  req.flash('success', 'Program created successfully.');
+  return res.redirect('/admin');
+}
+
+async function createCourse(req, res) {
+  await adminService.createCourse({
+    courseId: req.body.courseId,
+    courseName: req.body.courseName,
+    credits: Number(req.body.credits),
+    category: req.body.category,
+    minAttendanceReq: Number(req.body.minAttendanceReq),
+    programId: Number(req.body.programId),
+    semesterNo: Number(req.body.semesterNo)
+  });
+
+  req.flash('success', 'Course created successfully.');
+  return res.redirect('/admin');
+}
+
+async function createStudentAccount(req, res) {
+  const result = await adminService.createStudentAccount({
+    name: req.body.name,
+    phone: req.body.phone,
+    dob: req.body.dob,
+    gender: req.body.gender,
+    programId: Number(req.body.programId),
+    admissionYear: Number(req.body.admissionYear),
+    currentSemester: Number(req.body.currentSemester),
+    academicStatus: req.body.academicStatus,
+    currCpi: Number(req.body.currCpi || 0)
+  });
+
+  req.flash(
+    'success',
+    `Student created. Roll: ${result.generatedRollNumber}, Email: ${result.generatedEmail}, Temporary Password: ${result.generatedPassword}. ${result.reassignments} existing roll numbers were resequenced.`
+  );
+  return res.redirect('/admin');
+}
+
+async function createFacultyAccount(req, res) {
+  const result = await adminService.createFacultyAccount({
+    name: req.body.name,
+    phone: req.body.phone,
+    dob: req.body.dob,
+    gender: req.body.gender,
+    departmentId: Number(req.body.departmentId),
+    designation: req.body.designation,
+    experienceYears: Number(req.body.experienceYears || 0),
+    qualification: req.body.qualification
+  });
+
+  req.flash(
+    'success',
+    `Faculty created. Employee Code: ${result.generatedEmployeeCode}, Email: ${result.generatedEmail}, Temporary Password: ${result.generatedPassword}.`
+  );
+  return res.redirect('/admin');
+}
+
+async function previewFacultyEmployeeCode(req, res) {
+  const result = await adminService.previewNextFacultyEmployeeCode(Number(req.query.departmentId));
+  return res.json(result);
+}
+
+async function createAdminAccount(req, res) {
+  await adminService.createAdminAccount({
+    name: req.body.name,
+    email: req.body.email,
+    phone: req.body.phone,
+    dob: req.body.dob,
+    gender: req.body.gender,
+    password: req.body.password,
+    role: req.body.role
+  });
+
+  req.flash('success', 'Admin account created successfully.');
+  return res.redirect('/admin');
 }
 
 async function createCompany(req, res) {
@@ -46,7 +170,9 @@ async function createPlacementOffer(req, res) {
     offerType: req.body.offerType,
     location: req.body.location,
     eligibleMinCpi: Number(req.body.eligibleMinCpi),
-    applicationDeadline: req.body.applicationDeadline
+    applicationDeadline: req.body.applicationDeadline,
+    graduatingBatchFrom: Number(req.body.graduatingBatchFrom),
+    applyToHigherBatches: req.body.applyToHigherBatches === 'on'
   });
 
   req.flash('success', 'Placement offer created successfully.');
@@ -71,23 +197,6 @@ async function assignFaculty(req, res) {
   });
 
   req.flash('success', 'Faculty assignment saved successfully.');
-  return res.redirect('/admin');
-}
-
-async function createStudentBatch(req, res) {
-  const result = await adminService.createStudentBatch({
-    programId: Number(req.body.programId),
-    admissionYear: Number(req.body.admissionYear),
-    namesText: req.body.studentNames,
-    defaultGender: req.body.defaultGender,
-    defaultDob: req.body.defaultDob,
-    semester: Number(req.body.currentSemester || 1)
-  });
-
-  req.flash(
-    'success',
-    `${result.createdCount} students created. Branch code ${result.branchCode}. Default password pattern: ${result.defaultPasswordPattern}.`
-  );
   return res.redirect('/admin');
 }
 
@@ -189,11 +298,17 @@ async function showFacultyDirectory(req, res) {
 
 module.exports = {
   showAdminConsole,
+  createDepartment,
+  createProgram,
+  createCourse,
+  createStudentAccount,
+  createFacultyAccount,
+  previewFacultyEmployeeCode,
+  createAdminAccount,
   createCompany,
   createPlacementOffer,
   createCourseOffering,
   assignFaculty,
-  createStudentBatch,
   showPeopleDirectory,
   showStudentsDirectory,
   showFacultyDirectory

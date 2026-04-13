@@ -13,5 +13,7 @@ router.get('/grades', asyncHandler(facultyController.showGrades));
 router.post('/grades/components', asyncHandler(facultyController.addComponent));
 router.post('/grades/marks', asyncHandler(facultyController.saveMarks));
 router.post('/grades/final', asyncHandler(facultyController.publishGrades));
+router.get('/finalize-semester', asyncHandler(facultyController.showFinalizeSemester));
+router.post('/finalize-semester', asyncHandler(facultyController.finalizeSemester));
 
 module.exports = router;

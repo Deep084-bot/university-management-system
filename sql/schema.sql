@@ -3,6 +3,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 DROP TABLE IF EXISTS final_outcome CASCADE;
+DROP TABLE IF EXISTS credential_issuance_log CASCADE;
 DROP TABLE IF EXISTS application CASCADE;
 DROP TABLE IF EXISTS placement_offer CASCADE;
 DROP TABLE IF EXISTS company CASCADE;
@@ -46,6 +47,7 @@ CREATE TABLE app_user (
     dob DATE NOT NULL CHECK (dob <= CURRENT_DATE - INTERVAL '15 years'),
     gender VARCHAR(30) NOT NULL CHECK (gender IN ('Male', 'Female', 'Non-Binary', 'Prefer Not To Say')),
     password TEXT NOT NULL,
+    must_change_password BOOLEAN NOT NULL DEFAULT FALSE,
     user_type VARCHAR(20) NOT NULL CHECK (user_type IN ('STUDENT', 'FACULTY', 'ADMIN')),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -55,20 +57,23 @@ CREATE TABLE student (
     program_id BIGINT NOT NULL REFERENCES program(program_id) ON DELETE RESTRICT,
     roll_number VARCHAR(30) NOT NULL UNIQUE,
     admission_year INTEGER NOT NULL CHECK (admission_year BETWEEN 2000 AND 2100),
-    current_semester INTEGER NOT NULL CHECK (current_semester BETWEEN 1 AND 12)
+    current_semester INTEGER NOT NULL CHECK (current_semester BETWEEN 1 AND 12),
+    academic_status VARCHAR(30) NOT NULL DEFAULT 'Active' CHECK (academic_status IN ('Active', 'Graduated', 'Dropped', 'On Hold')),
+    curr_cpi NUMERIC(4,2) NOT NULL DEFAULT 0 CHECK (curr_cpi BETWEEN 0 AND 10)
 );
 
 CREATE TABLE faculty (
     user_id BIGINT PRIMARY KEY REFERENCES app_user(user_id) ON DELETE CASCADE,
     department_id BIGINT NOT NULL REFERENCES department(department_id) ON DELETE RESTRICT,
     employee_code VARCHAR(30) NOT NULL UNIQUE,
-    designation VARCHAR(100) NOT NULL
+    designation VARCHAR(100) NOT NULL,
+    experience_years INTEGER NOT NULL DEFAULT 0 CHECK (experience_years >= 0),
+    qualification VARCHAR(150) NOT NULL DEFAULT 'Not Provided'
 );
 
 CREATE TABLE admin_user (
     user_id BIGINT PRIMARY KEY REFERENCES app_user(user_id) ON DELETE CASCADE,
-    admin_code VARCHAR(30) NOT NULL UNIQUE,
-    role_title VARCHAR(100) NOT NULL
+    role VARCHAR(100) NOT NULL DEFAULT 'Administrator'
 );
 
 CREATE TABLE grade_scale (
@@ -80,7 +85,7 @@ CREATE TABLE course (
     course_id VARCHAR(20) PRIMARY KEY,
     course_name VARCHAR(150) NOT NULL,
     credits NUMERIC(4,1) NOT NULL CHECK (credits > 0),
-    category VARCHAR(30) NOT NULL CHECK (category IN ('Core', 'Elective', 'Lab', 'Open Elective', 'Audit')),
+    category VARCHAR(30) NOT NULL CHECK (category IN ('Core', 'Elective', 'Lab', 'Project')),
     min_attendance_req NUMERIC(5,2) NOT NULL CHECK (min_attendance_req BETWEEN 0 AND 100),
     program_id BIGINT NOT NULL REFERENCES program(program_id) ON DELETE RESTRICT,
     semester_no INTEGER NOT NULL CHECK (semester_no BETWEEN 1 AND 12)
@@ -124,7 +129,7 @@ CREATE TABLE enrollment (
 CREATE TABLE attendance (
     enrollment_id BIGINT NOT NULL REFERENCES enrollment(enrollment_id) ON DELETE CASCADE,
     attendance_date DATE NOT NULL,
-    status VARCHAR(20) NOT NULL CHECK (status IN ('Present', 'Absent', 'Excused')),
+    status VARCHAR(20) NOT NULL CHECK (status IN ('Present', 'Absent', 'Excused', 'P', 'A')),
     PRIMARY KEY (enrollment_id, attendance_date)
 );
 
@@ -174,10 +179,17 @@ CREATE TABLE placement_offer (
     company_id BIGINT NOT NULL REFERENCES company(company_id) ON DELETE CASCADE,
     role_name VARCHAR(120) NOT NULL,
     package_ctc NUMERIC(10,2) NOT NULL CHECK (package_ctc >= 0),
-    offer_type VARCHAR(20) NOT NULL CHECK (offer_type IN ('Internship', 'Full Time', 'PPO')),
+    offer_type VARCHAR(20) NOT NULL CHECK (offer_type IN ('Internship', 'Job', 'Full Time', 'PPO')),
     location VARCHAR(120),
     eligible_min_cpi NUMERIC(4,2) NOT NULL DEFAULT 0 CHECK (eligible_min_cpi BETWEEN 0 AND 10),
+    eligible_grad_batch_from INTEGER CHECK (eligible_grad_batch_from BETWEEN 2000 AND 2100),
+    eligible_grad_batch_to INTEGER CHECK (eligible_grad_batch_to BETWEEN 2000 AND 2100),
     application_deadline DATE,
+    CHECK (
+        eligible_grad_batch_from IS NULL
+        OR eligible_grad_batch_to IS NULL
+        OR eligible_grad_batch_from <= eligible_grad_batch_to
+    ),
     UNIQUE (company_id, role_name, offer_type, application_deadline)
 );
 
@@ -197,6 +209,17 @@ CREATE TABLE final_outcome (
     class_awarded VARCHAR(100) NOT NULL,
     degree_awarded VARCHAR(100) NOT NULL,
     graduation_year INTEGER NOT NULL CHECK (graduation_year BETWEEN 2000 AND 2100)
+);
+
+CREATE TABLE credential_issuance_log (
+    issuance_id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES app_user(user_id) ON DELETE CASCADE,
+    user_type VARCHAR(20) NOT NULL CHECK (user_type IN ('STUDENT', 'FACULTY')),
+    generated_email VARCHAR(255) NOT NULL,
+    generated_password VARCHAR(255) NOT NULL,
+    issued_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    consumed_at TIMESTAMPTZ
 );
 
 CREATE OR REPLACE FUNCTION enforce_user_subtype()
@@ -314,5 +337,6 @@ CREATE INDEX idx_attendance_date ON attendance(attendance_date);
 CREATE INDEX idx_assessment_offering ON assessment_component(offering_id);
 CREATE INDEX idx_application_student ON application(student_id);
 CREATE INDEX idx_application_offer ON application(offer_id);
+CREATE INDEX idx_credential_issuance_user ON credential_issuance_log(user_id, issued_at DESC);
 
 COMMIT;
