@@ -1,12 +1,10 @@
 const path = require('path');
 const express = require('express');
-const session = require('express-session');
-const PgSession = require('connect-pg-simple')(session);
+const cookieSession = require('cookie-session');
 const expressLayouts = require('express-ejs-layouts');
 const morgan = require('morgan');
 
 const env = require('./config/env');
-const { pool } = require('./config/db');
 const flashMiddleware = require('./middleware/flash');
 const { ensureAuthenticated, enforcePasswordChange } = require('./middleware/auth');
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
@@ -33,15 +31,9 @@ app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(
-  session({
-    store: new PgSession({
-      pool,
-      tableName: 'user_sessions',
-      createTableIfMissing: true
-    }),
-    secret: env.sessionSecret,
-    resave: false,
-    saveUninitialized: false,
+  cookieSession({
+    name: 'sums_session',
+    keys: [env.sessionSecret],
     cookie: {
       httpOnly: true,
       maxAge: 1000 * 60 * 60 * 8,

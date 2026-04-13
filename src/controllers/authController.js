@@ -43,9 +43,8 @@ async function updatePassword(req, res) {
 }
 
 async function logout(req, res) {
-  req.session.destroy(() => {
-    res.redirect('/login');
-  });
+  req.session = null;
+  res.redirect('/login');
 }
 
 module.exports = {
