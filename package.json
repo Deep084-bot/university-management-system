@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "build": "node -e \"console.log('No build step required for serverless Express deployment')\"",
     "setup": "node setup.js",
     "db:schema": "node src/scripts/schema.js",
     "db:seed": "node src/scripts/seed.js"
