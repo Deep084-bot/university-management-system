@@ -16,5 +16,30 @@
       <%- include('partials/flash') %>
       <%- body %>
     </main>
+    <script>
+      (function attachLogoutHandler() {
+        const logoutForm = document.querySelector('[data-logout-form]');
+
+        if (!logoutForm) {
+          return;
+        }
+
+        logoutForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+
+          try {
+            await fetch('/logout', {
+              method: 'POST',
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+              },
+              credentials: 'same-origin'
+            });
+          } finally {
+            window.location.replace('/login');
+          }
+        });
+      })();
+    </script>
   </body>
 </html>

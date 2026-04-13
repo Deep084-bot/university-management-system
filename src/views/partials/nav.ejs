@@ -20,9 +20,13 @@
         <a href="/admin/students-directory">Students Directory</a>
         <a href="/admin/faculty-directory">Faculty Directory</a>
       <% } %>
-      <form action="/logout" method="post">
+      <form action="/logout" method="post" data-logout-form>
         <button class="ghost-button" type="submit">Sign Out</button>
       </form>
+    </nav>
+  <% } else { %>
+    <nav class="nav-links">
+      <a href="/login">Sign In</a>
     </nav>
   <% } %>
 </header>

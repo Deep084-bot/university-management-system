@@ -52,7 +52,9 @@ app.use(enforcePasswordChange);
 
 app.get('/', (req, res) => {
   if (!req.session.user) {
-    return res.redirect('/login');
+    return res.render('auth/login', {
+      title: 'Sign In'
+    });
   }
 
   return res.redirect('/dashboard');
