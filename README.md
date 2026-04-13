@@ -102,3 +102,45 @@ Covered flows include:
 - `npm run db:seed` inserts a single admin account by default; add your own fixture data if you want more sample records.
 - `connect-pg-simple` will create the session table automatically when the app starts.
 - The current academic year and semester used by the registration workflow are controlled through environment variables.
+
+## Deploy on Vercel
+
+This project is configured to run on Vercel using a serverless Node.js function.
+
+### 1. Push code to GitHub
+
+Commit and push your latest code (including `api/index.js` and `vercel.json`).
+
+### 2. Create a Vercel project
+
+1. Go to Vercel dashboard.
+2. Import your GitHub repository.
+3. Keep the default build settings (Vercel will use `vercel.json`).
+
+### 3. Add environment variables in Vercel
+
+Add these variables in Project Settings -> Environment Variables:
+
+- `NODE_ENV=production`
+- `TRUST_PROXY=true`
+- `DATABASE_URL=<your production postgres connection string>`
+- `SESSION_SECRET=<a long random secret>`
+- `CURRENT_ACADEMIC_YEAR=2025-2026` (or your current year)
+- `CURRENT_SEMESTER=2` (or your current semester)
+
+### 4. Prepare your production database
+
+Run schema and seed scripts against your production database once:
+
+```bash
+DATABASE_URL="<your production database url>" npm run db:schema
+DATABASE_URL="<your production database url>" npm run db:seed
+```
+
+### 5. Deploy
+
+Trigger deployment from Vercel (or push a new commit). After deployment, open your Vercel URL and log in.
+
+### 6. Important production note
+
+Session data is stored in PostgreSQL. Keep using a persistent hosted PostgreSQL database in production.
