@@ -2,6 +2,15 @@ const adminModel = require('../models/adminModel');
 const adminService = require('../services/adminService');
 const env = require('../config/env');
 
+function buildAcademicYearOptions(currentAcademicYear) {
+  const startYear = Number.parseInt(String(currentAcademicYear).split('-')[0], 10);
+  if (Number.isNaN(startYear)) {
+    return [currentAcademicYear];
+  }
+
+  return [startYear - 1, startYear, startYear + 1].map((year) => `${year}-${year + 1}`);
+}
+
 async function showAdminConsole(req, res) {
   const [
     snapshot,
@@ -31,6 +40,7 @@ async function showAdminConsole(req, res) {
   const maxGraduatingBatch = Number.isNaN(academicYearStart)
     ? new Date().getFullYear() + 4
     : academicYearStart + 4;
+  const academicYearOptions = buildAcademicYearOptions(env.currentAcademicYear);
   const placementBatchOptions = [
     maxGraduatingBatch - 3,
     maxGraduatingBatch - 2,
@@ -48,6 +58,7 @@ async function showAdminConsole(req, res) {
     facultyDirectory,
     programs,
     departments,
+    academicYearOptions,
     maxGraduatingBatch,
     placementBatchOptions,
     adminUsers,

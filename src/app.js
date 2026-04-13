@@ -46,7 +46,6 @@ app.use(flashMiddleware);
 app.use((req, res, next) => {
   res.locals.currentUser = req.session.user || null;
   res.locals.currentAcademicYear = env.currentAcademicYear;
-  res.locals.currentSemester = env.currentSemester;
   next();
 });
 app.use(enforcePasswordChange);

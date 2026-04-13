@@ -236,7 +236,14 @@
           <% }) %>
         </select>
       </label>
-      <label><span>Academic Year</span><input type="text" name="academicYear" value="<%= currentAcademicYear %>" required /></label>
+      <label>
+        <span>Academic Year</span>
+        <select name="academicYear" required>
+          <% academicYearOptions.forEach((yearOption) => { %>
+            <option value="<%= yearOption %>" <%= yearOption === currentAcademicYear ? 'selected' : '' %>><%= yearOption %></option>
+          <% }) %>
+        </select>
+      </label>
       <label><span>Section</span><input type="text" name="section" value="A" required /></label>
       <button class="primary-button" type="submit">Create Offering</button>
     </form>

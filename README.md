@@ -8,7 +8,7 @@ A full-stack Smart University Academic & Placement Management System built with 
 - Node.js and Express.js for the MVC backend
 - EJS for server-rendered frontend views
 - `pg` for database access and transaction control
-- `express-session` with `connect-pg-simple` for session-backed authentication
+- `cookie-session` for signed cookie-based authentication sessions
 
 ## Project Structure
 
@@ -100,8 +100,7 @@ Covered flows include:
 
 - `npm run db:schema` and `npm run db:seed` both load the `.env` file through the Node scripts, so you do not need to export `DATABASE_URL` manually in your shell.
 - `npm run db:seed` inserts a single admin account by default; add your own fixture data if you want more sample records.
-- `connect-pg-simple` will create the session table automatically when the app starts.
-- The current academic year and semester used by the registration workflow are controlled through environment variables.
+- `CURRENT_ACADEMIC_YEAR` is optional; if you omit it, the app auto-derives academic year from current date.
 
 ## Deploy on Vercel
 
@@ -125,8 +124,7 @@ Add these variables in Project Settings -> Environment Variables:
 - `TRUST_PROXY=true`
 - `DATABASE_URL=<your production postgres connection string>`
 - `SESSION_SECRET=<a long random secret>`
-- `CURRENT_ACADEMIC_YEAR=2025-2026` (or your current year)
-- `CURRENT_SEMESTER=2` (or your current semester)
+- `CURRENT_ACADEMIC_YEAR=2025-2026` (optional override)
 
 ### 4. Prepare your production database
 
@@ -143,4 +141,4 @@ Trigger deployment from Vercel (or push a new commit). After deployment, open yo
 
 ### 6. Important production note
 
-Session data is stored in PostgreSQL. Keep using a persistent hosted PostgreSQL database in production.
+Use a strong `SESSION_SECRET` and keep using a persistent hosted PostgreSQL database in production for your application data.

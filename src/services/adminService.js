@@ -22,6 +22,27 @@ function normalizeOptionalNumber(value, fallback = 0) {
   return parsed;
 }
 
+function normalizeAcademicYear(value) {
+  const normalized = String(value || '')
+    .trim()
+    .replace(/[\u2012\u2013\u2014\u2212]/g, '-')
+    .replace(/\s+/g, '');
+
+  const match = normalized.match(/^(\d{4})-(\d{4})$/);
+  if (!match) {
+    throw new ServiceError('Academic year must be in YYYY-YYYY format (example: 2025-2026).');
+  }
+
+  const startYear = Number.parseInt(match[1], 10);
+  const endYear = Number.parseInt(match[2], 10);
+
+  if (endYear !== startYear + 1) {
+    throw new ServiceError('Academic year must span consecutive years (example: 2025-2026).');
+  }
+
+  return `${startYear}-${endYear}`;
+}
+
 async function logGeneratedCredential(client, { userId, userType, generatedEmail, generatedPassword }) {
   await client.query(
     `
@@ -734,7 +755,8 @@ async function createPlacementOffer(payload) {
 }
 
 async function createCourseOffering(payload) {
-  const { courseId, academicYear, section } = payload;
+  const { courseId, section } = payload;
+  const academicYear = normalizeAcademicYear(payload.academicYear);
 
   try {
     return await withTransaction(async (client) => {
@@ -766,6 +788,10 @@ async function createCourseOffering(payload) {
   } catch (error) {
     if (error.code === '23505') {
       throw new ServiceError('That course offering already exists.');
+    }
+
+    if (error.code === '23514' && error.constraint === 'course_offering_academic_year_check') {
+      throw new ServiceError('Academic year must be in YYYY-YYYY format (example: 2025-2026).');
     }
 
     throw error;
